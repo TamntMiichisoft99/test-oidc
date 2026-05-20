@@ -1,4 +1,4 @@
-name: OIDC Test
+name: Dump OIDC Token
 
 on:
   workflow_dispatch:
@@ -8,10 +8,13 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  dump:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Get OIDC Token
         run: |
           TOKEN=$(curl -s \
@@ -19,4 +22,10 @@ jobs:
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
             | jq -r '.value')
 
-          echo "$TOKEN"
+          echo "$TOKEN" > token.txt
+
+      - name: Upload token artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oidc-token
+          path: token.txt
